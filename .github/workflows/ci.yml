@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install tox
+        run: python -m pip install --upgrade pip tox
+
+      - name: Ruff format check (tox + uv run)
+        run: tox -e format
+
+      - name: Ruff lint (tox + uv run)
+        run: tox -e lint
+
+      - name: Pytest (tox + uv run)
+        run: tox -e py
+
+      - name: Integration tests
+        run: tox -e integration
+
+      - name: API contract tests (pact-style)
+        run: tox -e pact
+
+      - name: Backend end-to-end tests
+        run: tox -e e2e-backend
+
+  docker-builds:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend Dockerfile
+        run: docker build -f Dockerfile.backend -t asset-ltv-backend:ci .
+
+      - name: Build frontend Dockerfile
+        run: docker build -f Dockerfile.frontend -t asset-ltv-frontend:ci .
+
+      - name: Build fullstack Dockerfile
+        run: docker build -f Dockerfile.fullstack -t asset-ltv-fullstack:ci .
+
+  frontend-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install frontend dependencies
+        run: npm --prefix frontend ci
+
+      - name: Install Playwright Chromium
+        run: npx --yes playwright@1.52.0 install --with-deps chromium
+
+      - name: Run frontend E2E
+        run: npx --yes playwright@1.52.0 test -c frontend/playwright.config.mjs
