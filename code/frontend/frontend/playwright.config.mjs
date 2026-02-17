@@ -9,7 +9,7 @@ export default defineConfig({
   },
   webServer: {
     command:
-      "npm --prefix frontend run build && npx --yes http-server frontend/dist -p 4173 -a 127.0.0.1",
+      "npm --prefix code/frontend/frontend run build && npx --yes http-server code/frontend/frontend/dist -p 4173 -a 127.0.0.1",
     port: 4173,
     timeout: 120000,
     reuseExistingServer: true,
