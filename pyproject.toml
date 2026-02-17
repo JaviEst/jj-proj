@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "asset-ltv"
+version = "0.1.0"
+description = "Asset LTV stress estimator with 4-year moving average baseline"
+requires-python = ">=3.10"
+
+[project.scripts]
+asset-ltv = "asset_ltv.cli:cli"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+markers = [
+  "integration: integration tests across application layers",
+  "e2e_backend: end-to-end tests against a live backend process",
+  "pact: provider contract tests for API responses",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
