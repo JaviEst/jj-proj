@@ -78,22 +78,6 @@ jobs:
         with:
           dockerfile: code/frontend/Dockerfile.frontend
 
-      - name: Lint fullstack Dockerfile
-        uses: hadolint/hadolint-action@v3.1.0
-        with:
-          dockerfile: Dockerfile.fullstack
-
-  semgrep:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Run semgrep
-        uses: returntocorp/semgrep-action@v1
-        with:
-          config: p/ci
-
   docker-build:
     runs-on: ubuntu-latest
     steps:
@@ -105,9 +89,6 @@ jobs:
 
       - name: Build frontend image
         run: docker build -f code/frontend/Dockerfile.frontend -t asset-ltv-frontend:ci .
-
-      - name: Build fullstack image
-        run: docker build -f Dockerfile.fullstack -t asset-ltv-fullstack:ci .
 
   docker-publish:
     runs-on: ubuntu-latest

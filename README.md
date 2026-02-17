@@ -30,10 +30,8 @@ code/
 .github/workflows/
   backend-ci.yml
   frontend-ci.yml
-Dockerfile.fullstack
 docker-compose.yml
 docker-compose.debug.yml
-MIGRATION_MATRIX.md
 grafana/
 prometheus/
 ```
@@ -74,12 +72,6 @@ Build frontend image:
 docker build -f code/frontend/Dockerfile.frontend -t asset-ltv-frontend .
 ```
 
-Build fullstack image:
-
-```bash
-docker build -f Dockerfile.fullstack -t asset-ltv-fullstack .
-```
-
 Run full stack:
 
 ```bash
@@ -94,7 +86,8 @@ docker compose -f docker-compose.yml -f docker-compose.debug.yml up --build
 
 Access points:
 
-- UI/API combined app: `http://localhost:8000`
+- Frontend UI: `http://localhost:4200`
+- Backend API: `http://localhost:8000`
 - UI dev server (debug mode): `http://localhost:4200`
 - API docs: `http://localhost:8000/docs`
 - Grafana: `http://localhost:3000`
@@ -137,16 +130,17 @@ Jobs:
 - Lint/format: Ruff checks via tox.
 - Tests: unit + integration + pact + backend e2e, with coverage threshold.
 - Security: gitleaks, pip-audit, semgrep.
-- Containers: backend and fullstack Docker builds.
-- Publish (optional): pushes backend/fullstack images to GHCR on `main` when enabled.
+- Dockerfile lint: hadolint for backend Dockerfile.
+- Containers: backend Docker build.
+- Publish (optional): pushes backend image to GHCR on `main` when enabled.
 
 ### Frontend CI (`.github/workflows/frontend-ci.yml`)
 
 Jobs:
 - Lint/build/test: npm lint/typecheck/build/unit (if scripts are configured).
 - E2E: Playwright tests with artifact upload.
-- Security/quality: hadolint + semgrep.
-- Containers: frontend and fullstack Docker builds.
+- Dockerfile lint: hadolint for frontend Dockerfile.
+- Containers: frontend Docker build.
 - Publish (optional): pushes frontend image to GHCR on `main` when enabled.
 
 ### Required/Optional Secrets and Variables
@@ -160,12 +154,3 @@ Jobs:
 - Test failures: reproduce in `code/backend` or frontend Playwright command.
 - Security failures: review scanner output and patch vulnerable patterns/dependencies.
 - Docker build failures: rebuild specific Dockerfile locally with the same command from CI.
-
-## Migration Notes
-
-- Legacy `src/` moved to `code/backend/src/`.
-- Legacy `tests/` moved to `code/backend/tests/`.
-- Legacy `frontend/` moved to `code/frontend/frontend/`.
-- Legacy `Dockerfile.backend` moved to `code/backend/Dockerfile.backend`.
-- Legacy `Dockerfile.frontend` moved to `code/frontend/Dockerfile.frontend`.
-- See `MIGRATION_MATRIX.md` for the full mapping.
