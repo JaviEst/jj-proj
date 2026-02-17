@@ -335,7 +335,7 @@ const html = `<!doctype html>
 
             <p class="links" style="margin-top:0.65rem;">
               Hover on chart lines in Grafana to inspect exact values and timestamps.
-              <a href="/docs" target="_blank" rel="noreferrer">API Docs</a>
+              <a id="apiDocsLink" href="/docs" target="_blank" rel="noreferrer">API Docs</a>
             </p>
           </div>
         </section>
@@ -374,6 +374,7 @@ const html = `<!doctype html>
       };
 
       const grafanaFrame = document.getElementById("grafanaFrame");
+      const apiDocsLink = document.getElementById("apiDocsLink");
 
       let pollTimer = null;
       let eventSource = null;
@@ -393,6 +394,10 @@ const html = `<!doctype html>
 
       function getApiBase() {
         return (controls.apiBase.value.trim() || defaultApiBase).replace(/\/$/, "");
+      }
+
+      function updateApiDocsLink() {
+        apiDocsLink.href = getApiBase() + "/docs";
       }
 
       function normalizeSymbol(rawTicker, market) {
@@ -581,6 +586,8 @@ const html = `<!doctype html>
         updateGrafana(controls.symbol.value.trim().toLowerCase());
       });
 
+      controls.apiBase.addEventListener("input", updateApiDocsLink);
+
       document.getElementById("stop").addEventListener("click", function () {
         stopLive();
         setStatus("Live updates stopped", "warn");
@@ -627,6 +634,7 @@ const html = `<!doctype html>
       });
 
       applyProfile();
+      updateApiDocsLink();
       updateGrafana(controls.symbol.value.trim().toLowerCase());
       setStatus("Ready: choose a ticker and click Run Analysis");
     </script>

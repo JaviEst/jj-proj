@@ -1,21 +1,32 @@
 services:
-  app:
+  backend:
     build:
       context: .
-      dockerfile: Dockerfile.fullstack
-    image: asset-ltv-fullstack:latest
-    container_name: asset-ltv-app
+      dockerfile: code/backend/Dockerfile.backend
+    image: asset-ltv-backend:latest
+    container_name: asset-ltv-backend
     ports:
       - "8000:8000"
     environment:
       CORS_ORIGINS: "http://localhost:4200,http://localhost:8000,http://localhost:3000"
-      STATIC_DIR: "/app/static"
     restart: unless-stopped
     depends_on:
       prometheus:
         condition: service_started
       grafana:
         condition: service_started
+
+  frontend:
+    build:
+      context: .
+      dockerfile: code/frontend/Dockerfile.frontend
+    image: asset-ltv-frontend:latest
+    container_name: asset-ltv-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
 
   prometheus:
     image: prom/prometheus:v2.54.1
