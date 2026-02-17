@@ -3,21 +3,8 @@ name: Frontend CI
 on:
   push:
     branches: [main]
-    paths:
-      - "code/frontend/**"
-      - "code/backend/src/asset_ltv/api/**"
-      - "Dockerfile.fullstack"
-      - "docker-compose.yml"
-      - "docker-compose.debug.yml"
-      - ".github/workflows/frontend-ci.yml"
   pull_request:
-    paths:
-      - "code/frontend/**"
-      - "code/backend/src/asset_ltv/api/**"
-      - "Dockerfile.fullstack"
-      - "docker-compose.yml"
-      - "docker-compose.debug.yml"
-      - ".github/workflows/frontend-ci.yml"
+    branches: [main]
 
 permissions:
   contents: read
