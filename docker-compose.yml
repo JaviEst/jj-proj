@@ -12,8 +12,10 @@ services:
       STATIC_DIR: "/app/static"
     restart: unless-stopped
     depends_on:
-      - prometheus
-      - grafana
+      prometheus:
+        condition: service_started
+      grafana:
+        condition: service_started
 
   prometheus:
     image: prom/prometheus:v2.54.1

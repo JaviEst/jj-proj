@@ -1,13 +1,11 @@
-# Builds and serves an Angular app expected in ./frontend
-
 FROM node:20-alpine AS build
 WORKDIR /frontend
 
-COPY frontend/package*.json ./
+COPY code/frontend/frontend/package*.json ./
 RUN npm ci
 
-COPY frontend/ ./
-RUN npm run build -- --configuration production
+COPY code/frontend/frontend/ ./
+RUN npm run build
 
 FROM nginx:1.27-alpine
 COPY --from=build /frontend/dist /usr/share/nginx/html

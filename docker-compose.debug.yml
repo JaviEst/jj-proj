@@ -2,7 +2,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile.backend
+      dockerfile: code/backend/Dockerfile.backend
     command: >
       uvicorn asset_ltv.api.main:app
       --host 0.0.0.0
@@ -10,8 +10,8 @@ services:
       --reload
       --reload-dir /app/src
     volumes:
-      - ./src:/app/src
-      - ./frontend/dist:/app/static
+      - ./code/backend/src:/app/src
+      - ./code/frontend/frontend/dist:/app/static
     environment:
       CORS_ORIGINS: "http://localhost:4200,http://localhost:8000,http://localhost:3000"
       STATIC_DIR: "/app/static"
@@ -19,14 +19,14 @@ services:
   frontend-dev:
     image: node:20-alpine
     container_name: asset-ltv-frontend-dev
-    working_dir: /workspace/frontend
+    working_dir: /workspace/code/frontend/frontend
     command: >
       sh -c "npm ci &&
       node build.mjs &&
       (node --watch build.mjs &) &&
       npx --yes browser-sync start --server dist --files dist --no-open --port 4200 --host 0.0.0.0"
     volumes:
-      - ./frontend:/workspace/frontend
+      - ./:/workspace
     ports:
       - "4200:4200"
     restart: unless-stopped
