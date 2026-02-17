@@ -5,31 +5,52 @@ Service to estimate safer entry loan-to-value (LTV) using a 4-year moving averag
 ## Features
 
 - Live price fetch from Stooq source.
-- `click`-based CLI with typed option validation and helpful errors.
-- FastAPI backend with OpenAPI/Swagger docs for frontend integration.
-- Compute trailing 4-year moving average from latest price date.
-- Estimate stressed LTV if price reverts to that baseline.
-- Report:
-  - max entry LTV under margin-call threshold (default `70%`)
-  - max entry LTV under liquidation threshold (default `80%`)
-  - conservative recommended max entry LTV (margin-call minus safety buffer)
+- `click`-based CLI with typed option validation.
+- FastAPI backend with OpenAPI/Swagger docs.
+- Frontend dashboard with pull/push live modes.
+- Prometheus metrics and Grafana dashboard integration.
 
-## Formula
+## Repository Structure
 
-- `L_stress = L_entry * (P_now / P_base)`
-- To stay below threshold `T`: `L_entry <= T / (P_now / P_base)`
+```text
+code/
+  backend/
+    src/asset_ltv/
+    tests/
+    pyproject.toml
+    tox.ini
+    requirements.txt
+    requirements-test.txt
+  frontend/
+    frontend/
+      build.mjs
+      package.json
+      playwright.config.mjs
+      tests/
+.github/workflows/
+  backend-ci.yml
+  frontend-ci.yml
+Dockerfile.fullstack
+docker-compose.yml
+docker-compose.debug.yml
+MIGRATION_MATRIX.md
+grafana/
+prometheus/
+```
 
-## App usage
+## Quickstart
 
-CLI (live Stooq):
+Backend CLI:
 
 ```bash
+cd code/backend
 uv run --with-requirements requirements-test.txt python -m asset_ltv --asset BTC --source stooq --symbol btcusd --entry-ltv 0.50
 ```
 
-API server:
+Backend API (local):
 
 ```bash
+cd code/backend
 uv run --with-requirements requirements-test.txt uvicorn asset_ltv.api.main:app --reload
 ```
 
@@ -39,147 +60,52 @@ Swagger docs:
 http://127.0.0.1:8000/docs
 ```
 
-Main endpoints:
-
-- `GET /health`
-- `GET /metrics` (Prometheus scrape endpoint)
-- `GET /v1/sources`
-- `POST /v1/analyze`
-- `GET /v1/stream/analyze` (SSE push updates)
-
-Example API request:
-
-```json
-{
-  "asset": "BTC",
-  "source": "stooq",
-  "symbol": "btcusd",
-  "entry_ltv": 0.5,
-  "liquidation_ltv": 0.8,
-  "margin_call_ltv": 0.7,
-  "safety_buffer": 0.05
-}
-```
-
-Legacy CLI examples:
-
-Live Stooq:
-
-```bash
-uv run --with-requirements requirements-test.txt python -m asset_ltv --asset BTC --source stooq --symbol btcusd --entry-ltv 0.50
-```
-
-For equities (example):
-
-```bash
-uv run --with-requirements requirements-test.txt python -m asset_ltv --asset AAPL --source stooq --symbol aapl.us --entry-ltv 0.45
-```
-
-Show help:
-
-```bash
-uv run --with-requirements requirements-test.txt python -m asset_ltv --help
-```
-
-`app.py` remains as a compatibility wrapper and delegates to `asset_ltv.cli`.
-
-## Project layout
-
-```text
-src/asset_ltv/
-  cli.py            # CLI entry point + output rendering
-  analysis.py       # pure business logic and LTV math
-  service.py        # orchestration layer used by CLI/API
-  models.py         # domain models (PricePoint, AnalysisResult)
-  data/stooq.py     # data-access layer for live price fetching
-  api/main.py       # FastAPI app + routes
-  api/schemas.py    # request/response contracts for docs
-```
-
 ## Docker
 
-Backend image:
+Build backend image:
 
 ```bash
-docker build -f Dockerfile.backend -t asset-ltv-backend .
+docker build -f code/backend/Dockerfile.backend -t asset-ltv-backend .
 ```
 
-Frontend image (expects Angular app under `frontend/`):
+Build frontend image:
 
 ```bash
-docker build -f Dockerfile.frontend -t asset-ltv-frontend .
+docker build -f code/frontend/Dockerfile.frontend -t asset-ltv-frontend .
 ```
 
-Fullstack image (build Angular + serve API/static together):
+Build fullstack image:
 
 ```bash
 docker build -f Dockerfile.fullstack -t asset-ltv-fullstack .
 ```
 
-Docker Compose (full stack):
+Run full stack:
 
 ```bash
 docker compose up --build
 ```
 
-Docker Compose debug mode (API + UI auto-refresh on save):
+Run debug stack (hot reload API/UI):
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.debug.yml up --build
 ```
 
-Debug URLs:
-- UI dev server: `http://localhost:4200`
-- API: `http://localhost:8000`
+Access points:
+
+- UI/API combined app: `http://localhost:8000`
+- UI dev server (debug mode): `http://localhost:4200`
+- API docs: `http://localhost:8000/docs`
 - Grafana: `http://localhost:3000`
 - Prometheus: `http://localhost:9090`
 
-In debug mode:
-- API reloads automatically via `uvicorn --reload` when files in `src/` change.
-- UI rebuilds on `frontend/build.mjs` changes and BrowserSync auto-refreshes the browser.
+## Testing and Quality
 
-Open:
-
-```text
-UI: http://localhost:8000
-Grafana: http://localhost:3000
-Prometheus: http://localhost:9090
-```
-
-The dashboard supports:
-- `once`: one-time request
-- `pull`: client polling with interval
-- `push`: server-sent events stream from `/v1/stream/analyze`
-
-Ticker workflow:
-- Enter any ticker (examples: `AAPL`, `TSLA`, `BTC`)
-- Choose market (`US Equities`, `Crypto`, or `Raw Symbol`)
-- Click `Apply Ticker` to auto-map source symbol (`AAPL` -> `aapl.us`, `BTC` -> `btcusd`)
-
-Grafana graphs:
-- Embedded directly in the UI
-- Hover any line to inspect timestamp and value details
-- Dashboard automatically filters by the active symbol
-
-CI/local Docker build verification:
+Backend (tox):
 
 ```bash
-tox -e docker-build
-```
-
-## Developer setup
-
-Install tooling with `uv`:
-
-```bash
-uv run --with-requirements requirements-test.txt pytest
-uv run --with-requirements requirements-test.txt ruff check .
-uv run --with-requirements requirements-test.txt ruff format --check .
-```
-
-Run all checks through tox:
-
-```bash
+cd code/backend
 tox -e format
 tox -e lint
 tox -e py
@@ -188,15 +114,58 @@ tox -e pact
 tox -e e2e-backend
 ```
 
-Frontend E2E (Playwright):
+Docker build validation through tox:
 
 ```bash
-npm --prefix frontend ci
-npx --yes playwright@1.52.0 install --with-deps chromium
-npx --yes playwright@1.52.0 test -c frontend/playwright.config.mjs
+cd code/backend
+tox -e docker-build
 ```
 
-## Requirements split
+Frontend E2E:
 
-- `requirements.txt`: runtime dependencies
-- `requirements-test.txt`: test and quality tooling (`pytest`, `ruff`, `tox`)
+```bash
+npm --prefix code/frontend/frontend ci
+npx --yes playwright@1.52.0 install --with-deps chromium
+npx --yes playwright@1.52.0 test -c code/frontend/frontend/playwright.config.mjs
+```
+
+## CI Architecture
+
+### Backend CI (`.github/workflows/backend-ci.yml`)
+
+Jobs:
+- Lint/format: Ruff checks via tox.
+- Tests: unit + integration + pact + backend e2e, with coverage threshold.
+- Security: gitleaks, pip-audit, semgrep.
+- Containers: backend and fullstack Docker builds.
+- Publish (optional): pushes backend/fullstack images to GHCR on `main` when enabled.
+
+### Frontend CI (`.github/workflows/frontend-ci.yml`)
+
+Jobs:
+- Lint/build/test: npm lint/typecheck/build/unit (if scripts are configured).
+- E2E: Playwright tests with artifact upload.
+- Security/quality: hadolint + semgrep.
+- Containers: frontend and fullstack Docker builds.
+- Publish (optional): pushes frontend image to GHCR on `main` when enabled.
+
+### Required/Optional Secrets and Variables
+
+- Uses built-in `GITHUB_TOKEN` for checkout/scans/package pushes.
+- Optional repository variable: `PUBLISH_DOCKER_IMAGES=true` to enable image publish jobs.
+
+### Failure Triage
+
+- Lint/format failures: run local tox and fix formatting/import/lint issues.
+- Test failures: reproduce in `code/backend` or frontend Playwright command.
+- Security failures: review scanner output and patch vulnerable patterns/dependencies.
+- Docker build failures: rebuild specific Dockerfile locally with the same command from CI.
+
+## Migration Notes
+
+- Legacy `src/` moved to `code/backend/src/`.
+- Legacy `tests/` moved to `code/backend/tests/`.
+- Legacy `frontend/` moved to `code/frontend/frontend/`.
+- Legacy `Dockerfile.backend` moved to `code/backend/Dockerfile.backend`.
+- Legacy `Dockerfile.frontend` moved to `code/frontend/Dockerfile.frontend`.
+- See `MIGRATION_MATRIX.md` for the full mapping.

@@ -1,13 +1,13 @@
-# Full-stack image: build Angular app, serve API + static UI from FastAPI.
+# Full-stack image: build frontend app, serve API + static UI from FastAPI.
 
 FROM node:20-alpine AS frontend-build
 WORKDIR /frontend
 
-COPY frontend/package*.json ./
+COPY code/frontend/frontend/package*.json ./
 RUN npm ci
 
-COPY frontend/ ./
-RUN npm run build -- --configuration production
+COPY code/frontend/frontend/ ./
+RUN npm run build
 
 FROM python:3.12-slim
 
@@ -16,14 +16,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-COPY requirements.txt ./
+COPY code/backend/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY pyproject.toml ./
-COPY src ./src
+COPY code/backend/pyproject.toml ./pyproject.toml
+COPY code/backend/src ./src
 RUN pip install --no-cache-dir .
 
-# Copy Angular build output into FastAPI static directory.
+# Copy frontend build output into FastAPI static directory.
 COPY --from=frontend-build /frontend/dist /app/static
 
 EXPOSE 8000
