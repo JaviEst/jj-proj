@@ -1,0 +1,14 @@
+.git
+.github
+.pytest_cache
+.ruff_cache
+.tox
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.egg-info
+uv.lock
+tests
+sample_prices.csv

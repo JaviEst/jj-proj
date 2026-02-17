@@ -1,0 +1,100 @@
+{
+  "uid": "asset-ltv-live",
+  "title": "Asset LTV Live",
+  "schemaVersion": 39,
+  "version": 1,
+  "timezone": "browser",
+  "refresh": "5s",
+  "templating": {
+    "list": [
+      {
+        "name": "symbol",
+        "label": "Symbol",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "query": {
+          "query": "label_values(asset_ltv_current_price, symbol)",
+          "refId": "PromVarSymbol"
+        },
+        "refresh": 2,
+        "includeAll": true,
+        "multi": false,
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Current Price",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "asset_ltv_current_price{symbol=~\"$symbol\"}",
+          "refId": "A",
+          "legendFormat": "{{symbol}}"
+        }
+      ],
+      "options": {"tooltip": {"mode": "multi", "sort": "desc"}}
+    },
+    {
+      "type": "timeseries",
+      "title": "4Y Baseline",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "asset_ltv_baseline_4y_ma{symbol=~\"$symbol\"}",
+          "refId": "A",
+          "legendFormat": "{{symbol}}"
+        }
+      ],
+      "options": {"tooltip": {"mode": "multi", "sort": "desc"}}
+    },
+    {
+      "type": "timeseries",
+      "title": "Stressed vs Recommended LTV",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "asset_ltv_stressed_ltv_at_baseline{symbol=~\"$symbol\"}",
+          "refId": "A",
+          "legendFormat": "stressed {{symbol}}"
+        },
+        {
+          "expr": "asset_ltv_recommended_max_entry_ltv{symbol=~\"$symbol\"}",
+          "refId": "B",
+          "legendFormat": "recommended {{symbol}}"
+        },
+        {
+          "expr": "asset_ltv_max_entry_ltv_for_margin_call{symbol=~\"$symbol\"}",
+          "refId": "C",
+          "legendFormat": "max margin {{symbol}}"
+        },
+        {
+          "expr": "asset_ltv_max_entry_ltv_for_liquidation{symbol=~\"$symbol\"}",
+          "refId": "D",
+          "legendFormat": "max liquidation {{symbol}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      },
+      "options": {"tooltip": {"mode": "multi", "sort": "desc"}}
+    }
+  ]
+}
