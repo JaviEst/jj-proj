@@ -32,14 +32,14 @@ env/
 build/
 dist/
 
-# Frontend / Angular
-frontend/node_modules/
-frontend/dist/
-frontend/.angular/
-frontend/.angular/cache/
-frontend/coverage/
-frontend/test-results/
-frontend/playwright-report/
+# Frontend
+code/frontend/frontend/node_modules/
+code/frontend/frontend/dist/
+code/frontend/frontend/.angular/
+code/frontend/frontend/.angular/cache/
+code/frontend/frontend/coverage/
+code/frontend/frontend/test-results/
+code/frontend/frontend/playwright-report/
 
 # Logs
 *.log
